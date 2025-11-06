@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:18
+    container_name: postgres-order
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: root # 기본 사용자=postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: order_db # 기본 스키마=postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - ./docker/db/postgresql:/var/lib/postgresql/18/docker
