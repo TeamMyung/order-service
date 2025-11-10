@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/vendor/orders")
+@RequestMapping("/v1/orders/vendor")
 @Tag(name = "Vendor 주문 API", description = "업체(VENDOR)용 주문 관련 API")
 //@PreAuthorize("hasRole('ROLE_VENDOR')")
 public class VendorOrderController {

@@ -18,17 +18,18 @@ public class GlobalExceptionHandler {
 			.body(new ApiResponse<>(ErrorCode.PRODUCT_NOT_FOUND));
 	}
 
-	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ApiResponse<?>> handleBadRequest(IllegalArgumentException e) {
+	@ExceptionHandler(CustomException.class)
+	public ResponseEntity<ApiResponse<?>> handleCustomException(CustomException e) {
+		ErrorCode code = e.getErrorCode();
 		return ResponseEntity
-			.status(ErrorCode.INVALID_REQUEST.getStatus().value())
-			.body(new ApiResponse<>(ErrorCode.INVALID_REQUEST));
+			.status(code.getStatus())
+			.body(new ApiResponse<>(code));
 	}
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse<?>> handleGeneral(Exception e) {
 		return ResponseEntity
-			.status(ErrorCode.INTERNAL_ERROR.getStatus().value())
-			.body(new ApiResponse<>(ErrorCode.INTERNAL_ERROR));
+			.status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus().value())
+			.body(new ApiResponse<>(ErrorCode.INTERNAL_SERVER_ERROR));
 	}
 }

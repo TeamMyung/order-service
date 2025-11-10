@@ -11,13 +11,17 @@ import com.sparta.orderservice.dto.response.OrderResponseDto;
 import com.sparta.orderservice.entity.OrderEntity;
 import com.sparta.orderservice.entity.enums.OrderStatus;
 import com.sparta.orderservice.global.client.ProductClient;
-import com.sparta.orderservice.global.client.ProductResponseDto;
+import com.sparta.orderservice.global.client.ProductDetailResponseDto;
+import com.sparta.orderservice.global.dto.ApiResponse;
+import com.sparta.orderservice.global.exception.CustomException;
 import com.sparta.orderservice.global.exception.ErrorCode;
 import com.sparta.orderservice.repository.OrderRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VendorOrderService {
@@ -28,13 +32,32 @@ public class VendorOrderService {
 	@Transactional
 	public OrderResponseDto createOrder(CreateOrderRequestDto requestDto, UUID vendorId) {
 
-		ProductResponseDto product = productClient.getProductById(requestDto.getProductId());
+		ProductDetailResponseDto product;
+
+		try {
+			product = productClient.getProductById(requestDto.getProductId());
+		}
+		catch (feign.FeignException.ServiceUnavailable e) {
+			throw new CustomException(ErrorCode.PRODUCT_SERVICE_UNAVAILABLE);
+		}
+		catch (feign.FeignException.NotFound e) {
+			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+		}
+		catch (feign.FeignException e) {
+			log.error("FeignException: status={}, body={}", e.status(), e.contentUTF8());
+			throw new CustomException(ErrorCode.PRODUCT_RESPONSE_MAPPING_FAILED);
+		}
+		catch (Exception e) {
+			log.error("Unexpected exception when calling product-service: {}", e.getMessage());
+			throw new CustomException(ErrorCode.PRODUCT_RESPONSE_INVALID_FORMAT);
+		}
+
 		if (product == null) {
-			throw new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND.getDetails());
+			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
 		}
 
 		if (product.getStock() < requestDto.getQuantity()) {
-			throw new IllegalArgumentException("재고가 부족합니다. (현재 재고: " + product.getStock() + ")");
+			throw new CustomException(ErrorCode.INSUFFICIENT_STOCK);
 		}
 
 		OrderEntity order = OrderEntity.builder()

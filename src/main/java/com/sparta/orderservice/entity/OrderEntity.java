@@ -13,6 +13,8 @@ import com.sparta.orderservice.global.entity.BaseEntity;
 @Entity
 @Table(name = "p_orders")
 @Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -50,6 +52,13 @@ public class OrderEntity extends BaseEntity {
 
 	public void approve(BigInteger userId) {
 		this.approvedAt = LocalDateTime.now();
+	}
+
+	@PreUpdate
+	public void onUpdate() {
+		if (orderStatus == OrderStatus.ACCEPTED || orderStatus == OrderStatus.CANCELED) {
+			this.approvedAt = LocalDateTime.now();
+		}
 	}
 
 }

@@ -23,6 +23,9 @@ server:
   port: 8085
 
 eureka:
+  instance:
+    prefer-ip-address: true
+    hostname: order-service
   client:
     register-with-eureka: true
     fetch-registry: true
