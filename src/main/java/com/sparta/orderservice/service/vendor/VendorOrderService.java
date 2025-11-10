@@ -42,7 +42,7 @@ public class VendorOrderService {
 			throw new CustomException(ErrorCode.PRODUCT_SERVICE_UNAVAILABLE);
 		}
 		catch (feign.FeignException.NotFound e) {
-			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND_ORDER);
 		}
 		catch (feign.FeignException e) {
 			log.error("FeignException: status={}, body={}", e.status(), e.contentUTF8());
@@ -54,7 +54,7 @@ public class VendorOrderService {
 		}
 
 		if (product == null) {
-			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+			throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND_ORDER);
 		}
 
 		if (product.getStock() < requestDto.getQuantity()) {
@@ -65,34 +65,38 @@ public class VendorOrderService {
 			productClient.decreaseStock(product.getProductId(), requestDto.getQuantity());
 		} catch (Exception e) {
 			log.error("상품 재고 감소 실패: {}", e.getMessage());
-			throw new CustomException(ErrorCode.PRODUCT_UPDATE_FAILED);
+			throw new CustomException(ErrorCode.PRODUCT_STOCK_UPDATE_FAILED);
 		}
+		try {
+			UUID deliveryId = UUID.randomUUID();
 
-		UUID deliveryId = UUID.randomUUID();
+			OrderEntity order = OrderEntity.builder()
+				.producerId(product.getVendorId())
+				.receiverId(vendorId)
+				.productId(requestDto.getProductId())
+				.quantity(requestDto.getQuantity())
+				.request(requestDto.getRequest())
+				.orderStatus(OrderStatus.PENDING)
+				//.deliveryStatus(DeliveryStatus.PENDING)
+				.build();
 
-		OrderEntity order = OrderEntity.builder()
-			.producerId(product.getVendorId())
-			.receiverId(vendorId)
-			.productId(requestDto.getProductId())
-			.quantity(requestDto.getQuantity())
-			.request(requestDto.getRequest())
-			.orderStatus(OrderStatus.PENDING)
-			//.deliveryStatus(DeliveryStatus.PENDING)
-			.build();
+			orderRepository.save(order);
 
-		orderRepository.save(order);
+			int totalPrice = product.getPrice() * requestDto.getQuantity();
 
-		int totalPrice = product.getPrice() * requestDto.getQuantity();
-
-		return OrderResponseDto.builder()
-			.orderId(order.getOrderId())
-			.productId(order.getProductId())
-			.productName(product.getProductName())
-			.orderStatus(order.getOrderStatus().name())
-			//order.getDeliveryStatus().name(),
-			.createdAt(order.getCreatedAt())
-			.deliveryId(order.getDeliveryId())
-			.totalPrice(totalPrice)
-			.build();
+			return OrderResponseDto.builder()
+				.orderId(order.getOrderId())
+				.productId(order.getProductId())
+				.productName(product.getProductName())
+				.orderStatus(order.getOrderStatus().name())
+				//order.getDeliveryStatus().name(),
+				.createdAt(order.getCreatedAt())
+				.deliveryId(order.getDeliveryId())
+				.totalPrice(totalPrice)
+				.build();
+		} catch (Exception e) {
+			log.error("주문 생성 실패: {}", e.getMessage());
+			throw new CustomException(ErrorCode.ORDER_CREATION_FAILED);
+		}
 	}
 }

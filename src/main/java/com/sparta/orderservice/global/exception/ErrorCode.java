@@ -37,12 +37,22 @@ public enum ErrorCode {
 	VENDOR_UNAUTHORIZED(5301, HttpStatus.FORBIDDEN, "업체 접근 권한이 없습니다."),
 
 	// 주문 에러 코드 : 6000번대
-	ORDER_NOT_FOUND(6001, "주문을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-	PRODUCT_SERVICE_UNAVAILABLE(6002, HttpStatus.SERVICE_UNAVAILABLE, "상품 서비스와의 통신에 실패했습니다."),
-	PRODUCT_RESPONSE_MAPPING_FAILED(6003, HttpStatus.BAD_GATEWAY, "상품 서비스 응답 매핑에 실패했습니다."),
-	PRODUCT_RESPONSE_INVALID_FORMAT(6004, HttpStatus.BAD_REQUEST, "상품 서비스 응답 형식이 올바르지 않습니다."),
-	INSUFFICIENT_STOCK(6101, HttpStatus.BAD_REQUEST, "재고가 부족합니다.")
-	;
+	PRODUCT_SERVICE_UNAVAILABLE(6001, HttpStatus.SERVICE_UNAVAILABLE, "상품 서비스와의 통신에 실패했습니다."),  // FeignException.ServiceUnavailable
+	PRODUCT_RESPONSE_MAPPING_FAILED(6002, HttpStatus.BAD_GATEWAY, "상품 서비스 응답 매핑에 실패했습니다."),     // FeignException 발생 시 JSON 변환 실패
+	PRODUCT_RESPONSE_INVALID_FORMAT(6003, HttpStatus.BAD_REQUEST, "상품 서비스 응답 형식이 올바르지 않습니다."), // 구조 불일치나 null 응답
+
+	PRODUCT_NOT_FOUND_ORDER(6004, HttpStatus.NOT_FOUND, "주문 대상 상품을 찾을 수 없습니다."), // getProductById() 결과 null
+	INSUFFICIENT_STOCK(6005, HttpStatus.BAD_REQUEST, "주문 수량이 재고를 초과했습니다."),        // 수량 초과
+
+	PRODUCT_STOCK_UPDATE_FAILED(6006, HttpStatus.INTERNAL_SERVER_ERROR, "상품 재고 차감 중 오류가 발생했습니다."), // Feign PUT 실패
+
+	ORDER_CREATION_FAILED(6007, HttpStatus.INTERNAL_SERVER_ERROR, "주문 생성 중 오류가 발생했습니다."), // DB save 실패
+	ORDER_NOT_FOUND(6008, HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."), // 이후 조회/취소 로직에서 사용 예정
+	ORDER_ACCESS_DENIED(6009, HttpStatus.FORBIDDEN, "해당 주문에 대한 접근 권한이 없습니다."),
+	ORDER_STATUS_INVALID(6010, HttpStatus.BAD_REQUEST, "유효하지 않은 주문 상태입니다."),
+	ORDER_CANCELLATION_FAILED(6011, HttpStatus.INTERNAL_SERVER_ERROR, "주문 취소 처리 중 오류가 발생했습니다."
+
+	);
 
 	private final int code;
 	private final HttpStatus status;
