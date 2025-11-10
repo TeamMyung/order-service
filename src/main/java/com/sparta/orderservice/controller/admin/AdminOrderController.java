@@ -2,15 +2,19 @@ package com.sparta.orderservice.controller.admin;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sparta.orderservice.dto.response.OrderListResponseDto;
 import com.sparta.orderservice.entity.enums.OrderStatus;
 import com.sparta.orderservice.global.dto.ApiResponse;
+import com.sparta.orderservice.service.OrderListService;
 import com.sparta.orderservice.service.admin.AdminOrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminOrderController {
 
 	private final AdminOrderService adminOrderService;
+	private final OrderListService orderListService;
 
 	@Operation(summary = "주문 상태 변경 API", description = "주문을 승인 또는 거절합니다.")
 	@PatchMapping("/{orderId}/status")
@@ -34,5 +39,15 @@ public class AdminOrderController {
 
 		adminOrderService.updateOrderStatus(orderId, newStatus, fakeAdminId);
 		return ResponseEntity.ok(new ApiResponse<>("주문 상태가 " + newStatus + "(으)로 변경되었습니다."));
+	}
+
+	@Operation(summary = "전체 주문 조회", description = "관리자가 전체 주문 내역을 조회합니다.")
+	@GetMapping
+	public ResponseEntity<ApiResponse<Page<OrderListResponseDto>>> getAllOrders(
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		Page<OrderListResponseDto> response = orderListService.getAllOrders(page, size);
+		return ResponseEntity.ok(new ApiResponse<>(response));
 	}
 }

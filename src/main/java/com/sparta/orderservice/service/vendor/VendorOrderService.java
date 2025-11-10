@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sparta.orderservice.dto.request.CreateOrderRequestDto;
+import com.sparta.orderservice.dto.response.OrderCancelResponseDto;
 import com.sparta.orderservice.dto.response.OrderResponseDto;
 import com.sparta.orderservice.entity.OrderEntity;
 import com.sparta.orderservice.entity.enums.OrderStatus;
@@ -67,6 +68,7 @@ public class VendorOrderService {
 			log.error("상품 재고 감소 실패: {}", e.getMessage());
 			throw new CustomException(ErrorCode.PRODUCT_STOCK_UPDATE_FAILED);
 		}
+
 		try {
 			UUID deliveryId = UUID.randomUUID();
 
@@ -74,9 +76,11 @@ public class VendorOrderService {
 				.producerId(product.getVendorId())
 				.receiverId(vendorId)
 				.productId(requestDto.getProductId())
+				.productName(product.getProductName())
 				.quantity(requestDto.getQuantity())
 				.request(requestDto.getRequest())
 				.orderStatus(OrderStatus.PENDING)
+				.deliveryId(deliveryId)
 				//.deliveryStatus(DeliveryStatus.PENDING)
 				.build();
 
@@ -98,5 +102,48 @@ public class VendorOrderService {
 			log.error("주문 생성 실패: {}", e.getMessage());
 			throw new CustomException(ErrorCode.ORDER_CREATION_FAILED);
 		}
+	}
+
+	@Transactional
+	public OrderCancelResponseDto cancelOrder(UUID orderId, UUID vendorId) {
+		OrderEntity order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
+		if (!order.getReceiverId().equals(vendorId)) {
+			throw new CustomException(ErrorCode.ORDER_ACCESS_DENIED);
+		}
+
+		switch (order.getOrderStatus()) {
+			case PENDING:
+				order.updateOrderStatus(OrderStatus.CANCELED);
+				try {
+					productClient.increaseStock(order.getProductId(), order.getQuantity());
+				} catch (Exception e) {
+					log.error("상품 재고 복구 실패: {}", e.getMessage());
+					throw new CustomException(ErrorCode.PRODUCT_STOCK_RESTORE_FAILED);
+				}
+				break;
+			case CANCELED:
+				throw new CustomException(ErrorCode.ORDER_ALREADY_CANCELED);
+			default:
+				throw new CustomException(ErrorCode.ORDER_CANNOT_CANCEL);
+		}
+
+		try {
+			orderRepository.save(order);
+		} catch (Exception e) {
+			log.error("주문 취소 중 DB 오류: {}", e.getMessage());
+			throw new CustomException(ErrorCode.ORDER_CANCELLATION_FAILED);
+		}
+
+		return OrderCancelResponseDto.builder()
+			.orderId(order.getOrderId())
+			.productId(order.getProductId())
+			.productName(order.getProductName())
+			.orderStatus(order.getOrderStatus().name())
+			.createdAt(order.getCreatedAt())
+			.canceledAt(LocalDateTime.now())
+			.updatedAt(order.getUpdatedAt())
+			.build();
 	}
 }

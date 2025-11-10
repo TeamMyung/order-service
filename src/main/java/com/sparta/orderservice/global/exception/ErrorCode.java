@@ -50,9 +50,12 @@ public enum ErrorCode {
 	ORDER_NOT_FOUND(6008, HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."), // 이후 조회/취소 로직에서 사용 예정
 	ORDER_ACCESS_DENIED(6009, HttpStatus.FORBIDDEN, "해당 주문에 대한 접근 권한이 없습니다."),
 	ORDER_STATUS_INVALID(6010, HttpStatus.BAD_REQUEST, "유효하지 않은 주문 상태입니다."),
-	ORDER_CANCELLATION_FAILED(6011, HttpStatus.INTERNAL_SERVER_ERROR, "주문 취소 처리 중 오류가 발생했습니다."
-
-	);
+	ORDER_CANCELLATION_FAILED(6011, HttpStatus.INTERNAL_SERVER_ERROR, "주문 취소 처리 중 오류가 발생했습니다."),
+		// 주문 취소 관련
+	ORDER_ALREADY_CANCELED(6012, HttpStatus.BAD_REQUEST, "이미 취소된 주문입니다."),
+	ORDER_CANNOT_CANCEL(6013, HttpStatus.BAD_REQUEST, "현재 상태에서는 주문을 취소할 수 없습니다."),
+	PRODUCT_STOCK_RESTORE_FAILED(6014, HttpStatus.BAD_REQUEST, "주문 취소 후 재고 복구 실패")
+	;
 
 	private final int code;
 	private final HttpStatus status;

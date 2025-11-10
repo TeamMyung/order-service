@@ -21,4 +21,9 @@ public interface ProductClient {
 		@PathVariable("productId") UUID productId,
 		@RequestParam("quantity") int quantity
 	);
+
+	@PutMapping("/v1/internal/products/{productId}/increase-stock")
+	void increaseStock(
+		@PathVariable UUID productId,
+		@RequestParam("quantity") int quantity);
 }

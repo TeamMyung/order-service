@@ -34,6 +34,12 @@ public class OrderEntity extends BaseEntity {
 	@Column(name = "product_id", nullable = false)
 	private UUID productId;
 
+	@Column(name = "product_name",nullable = true, length = 50)
+	private String productName;
+
+	@Column(name = "hub_id")
+	private UUID hubId;
+
 	@Column(name = "delivery_id")
 	private UUID deliveryId;
 
@@ -61,5 +67,9 @@ public class OrderEntity extends BaseEntity {
 		}
 	}
 
-}
+	public void updateOrderStatus(OrderStatus newStatus) {
+		this.orderStatus = newStatus;
+		this.updatedAt = LocalDateTime.now();
+	}
 
+}
