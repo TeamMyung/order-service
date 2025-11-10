@@ -19,4 +19,7 @@ public class OrderResponseDto {
 	private String orderStatus;
 	//private String status;
 	private LocalDateTime createdAt;
+
+	private UUID deliveryId;
+	private int totalPrice;
 }

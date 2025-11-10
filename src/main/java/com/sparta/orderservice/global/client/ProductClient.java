@@ -5,13 +5,20 @@ import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.sparta.orderservice.global.config.FeignConfig;
-import com.sparta.orderservice.global.dto.ApiResponse;
 
 @FeignClient(name = "product-service", configuration = FeignConfig.class)
 public interface ProductClient {
 
-	@GetMapping("/v1/products/{productId}")
+	@GetMapping("/v1/internal/products/{productId}")
 	ProductDetailResponseDto getProductById(@PathVariable("productId") UUID productId);
+
+	@PutMapping("/v1/internal/products/{productId}/decrease-stock")
+	void decreaseStock(
+		@PathVariable("productId") UUID productId,
+		@RequestParam("quantity") int quantity
+	);
 }

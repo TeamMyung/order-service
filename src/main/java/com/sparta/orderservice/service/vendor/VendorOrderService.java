@@ -32,6 +32,7 @@ public class VendorOrderService {
 	@Transactional
 	public OrderResponseDto createOrder(CreateOrderRequestDto requestDto, UUID vendorId) {
 
+		ApiResponse<ProductDetailResponseDto> response;
 		ProductDetailResponseDto product;
 
 		try {
@@ -60,8 +61,18 @@ public class VendorOrderService {
 			throw new CustomException(ErrorCode.INSUFFICIENT_STOCK);
 		}
 
+		try {
+			productClient.decreaseStock(product.getProductId(), requestDto.getQuantity());
+		} catch (Exception e) {
+			log.error("상품 재고 감소 실패: {}", e.getMessage());
+			throw new CustomException(ErrorCode.PRODUCT_UPDATE_FAILED);
+		}
+
+		UUID deliveryId = UUID.randomUUID();
+
 		OrderEntity order = OrderEntity.builder()
-			.producerId(vendorId)
+			.producerId(product.getVendorId())
+			.receiverId(vendorId)
 			.productId(requestDto.getProductId())
 			.quantity(requestDto.getQuantity())
 			.request(requestDto.getRequest())
@@ -71,6 +82,8 @@ public class VendorOrderService {
 
 		orderRepository.save(order);
 
+		int totalPrice = product.getPrice() * requestDto.getQuantity();
+
 		return OrderResponseDto.builder()
 			.orderId(order.getOrderId())
 			.productId(order.getProductId())
@@ -78,6 +91,8 @@ public class VendorOrderService {
 			.orderStatus(order.getOrderStatus().name())
 			//order.getDeliveryStatus().name(),
 			.createdAt(order.getCreatedAt())
+			.deliveryId(order.getDeliveryId())
+			.totalPrice(totalPrice)
 			.build();
 	}
 }

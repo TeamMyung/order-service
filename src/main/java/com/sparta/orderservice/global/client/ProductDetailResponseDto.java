@@ -17,11 +17,13 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductDetailResponseDto {
 
+	private UUID productId;
 	private String productName;
 	private int price;
 	private int stock;
 	private String status;
 	private UUID hubId;
+	private UUID vendorId;
 	private String vendorName;
 	private String description;
 	private LocalDateTime createdAt;
