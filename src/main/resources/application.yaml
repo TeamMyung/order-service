@@ -18,6 +18,9 @@ spring:
           enabled: true
         response:
           enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
 server:
   port: 8085
