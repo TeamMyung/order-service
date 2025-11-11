@@ -12,7 +12,9 @@ import com.sparta.orderservice.repository.OrderRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderStatusService {
@@ -25,8 +27,11 @@ public class OrderStatusService {
 		OrderEntity order = orderRepository.findById(orderId)
 			.orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
+		log.info("요청한 허브 hubId: {}", hubId);
+		log.info("주문에 저장된 hubId: {}", order.getHubId());
+
 		if (!isAdmin) {
-			if (order.getReceiverId() == null || !order.getReceiverId().equals(hubId)) {
+			if (order.getHubId() == null || !order.getHubId().equals(hubId)) {
 				throw new CustomException(ErrorCode.ORDER_ACCESS_DENIED);
 			}
 		}

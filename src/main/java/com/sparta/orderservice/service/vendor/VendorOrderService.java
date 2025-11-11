@@ -75,6 +75,7 @@ public class VendorOrderService {
 			OrderEntity order = OrderEntity.builder()
 				.producerId(product.getVendorId())
 				.receiverId(vendorId)
+				.hubId(product.getHubId())
 				.productId(requestDto.getProductId())
 				.productName(product.getProductName())
 				.quantity(requestDto.getQuantity())
