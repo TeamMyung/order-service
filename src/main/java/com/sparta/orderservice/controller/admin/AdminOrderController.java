@@ -15,6 +15,7 @@ import com.sparta.orderservice.dto.response.OrderListResponseDto;
 import com.sparta.orderservice.entity.enums.OrderStatus;
 import com.sparta.orderservice.global.dto.ApiResponse;
 import com.sparta.orderservice.service.OrderListService;
+import com.sparta.orderservice.service.OrderStatusService;
 import com.sparta.orderservice.service.admin.AdminOrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,19 +28,7 @@ public class AdminOrderController {
 
 	private final AdminOrderService adminOrderService;
 	private final OrderListService orderListService;
-
-	@Operation(summary = "주문 상태 변경 API", description = "주문을 승인 또는 거절합니다.")
-	@PatchMapping("/{orderId}/status")
-	public ResponseEntity<ApiResponse<String>> updateOrderStatus(
-		@PathVariable UUID orderId,
-		@RequestParam("status") OrderStatus newStatus
-	) {
-		//로그인 되면 제거
-		UUID fakeAdminId = UUID.fromString("99999999-9999-9999-9999-999999999999");
-
-		adminOrderService.updateOrderStatus(orderId, newStatus, fakeAdminId);
-		return ResponseEntity.ok(new ApiResponse<>("주문 상태가 " + newStatus + "(으)로 변경되었습니다."));
-	}
+	private final OrderStatusService orderStatusService;
 
 	@Operation(summary = "전체 주문 조회", description = "관리자가 전체 주문 내역을 조회합니다.")
 	@GetMapping
@@ -49,5 +38,18 @@ public class AdminOrderController {
 	) {
 		Page<OrderListResponseDto> response = orderListService.getAllOrders(page, size);
 		return ResponseEntity.ok(new ApiResponse<>(response));
+	}
+
+	@Operation(summary = "관리자 주문 상태 변경 API", description = "관리자가 주문을 승인 또는 거절합니다.")
+	@PatchMapping("/{orderId}/status")
+	public ResponseEntity<ApiResponse<String>> updateOrderStatus(
+		@PathVariable UUID orderId,
+		@RequestParam("status") OrderStatus newStatus
+	) {
+		// 관리자 임시 ID (로그인 연동 전)
+		UUID adminId = UUID.fromString("99999999-9999-9999-9999-999999999999");
+
+		orderStatusService.updateOrderStatus(orderId, newStatus, adminId, null, true);
+		return ResponseEntity.ok(new ApiResponse<>("주문 상태가 " + newStatus + "로 변경되었습니다."));
 	}
 }

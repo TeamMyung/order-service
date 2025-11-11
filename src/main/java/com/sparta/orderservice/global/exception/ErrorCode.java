@@ -54,7 +54,8 @@ public enum ErrorCode {
 		// 주문 취소 관련
 	ORDER_ALREADY_CANCELED(6012, HttpStatus.BAD_REQUEST, "이미 취소된 주문입니다."),
 	ORDER_CANNOT_CANCEL(6013, HttpStatus.BAD_REQUEST, "현재 상태에서는 주문을 취소할 수 없습니다."),
-	PRODUCT_STOCK_RESTORE_FAILED(6014, HttpStatus.BAD_REQUEST, "주문 취소 후 재고 복구 실패")
+	PRODUCT_STOCK_RESTORE_FAILED(6014, HttpStatus.BAD_REQUEST, "주문 취소 후 재고 복구 실패"),
+	ORDER_ALREADY_ACCEPTED(6015, HttpStatus.BAD_REQUEST, "이미 처리된 주문입니다.")
 	;
 
 	private final int code;
