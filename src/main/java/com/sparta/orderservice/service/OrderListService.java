@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +25,7 @@ public class OrderListService {
 
 	@Transactional(readOnly = true)
 	public Page<OrderListResponseDto> getVendorBuyOrders(UUID vendorId, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 		Page<OrderEntity> orders = orderRepository.findByReceiverId(vendorId, pageable);
 
 		return orders.map(this::convertToDto);
@@ -32,7 +33,7 @@ public class OrderListService {
 
 	@Transactional(readOnly = true)
 	public Page<OrderListResponseDto> getVendorSalesOrders(UUID vendorId, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 		Page<OrderEntity> orders = orderRepository.findByProducerId(vendorId, pageable);
 
 		return orders.map(this::convertToDto);
@@ -40,7 +41,7 @@ public class OrderListService {
 
 	@Transactional(readOnly = true)
 	public Page<OrderListResponseDto> getHubOrders(UUID hubId, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 		Page<OrderEntity> orders = orderRepository.findByHubId(hubId, pageable);
 
 		return orders.map(this::convertToDto);
@@ -48,7 +49,7 @@ public class OrderListService {
 
 	@Transactional(readOnly = true)
 	public Page<OrderListResponseDto> getAllOrders(int page, int size) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 		Page<OrderEntity> orders = orderRepository.findAll(pageable);
 
 		return orders.map(this::convertToDto);

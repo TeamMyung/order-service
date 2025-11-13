@@ -3,6 +3,7 @@ package com.sparta.orderservice.service.vendor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import com.sparta.orderservice.entity.enums.OrderStatus;
 import com.sparta.orderservice.global.client.ProductClient;
 import com.sparta.orderservice.global.client.ProductDetailResponseDto;
 import com.sparta.orderservice.global.dto.ApiResponse;
+import com.sparta.globalevent.event.SlackMessageEvent;
 import com.sparta.orderservice.global.exception.CustomException;
 import com.sparta.orderservice.global.exception.ErrorCode;
 import com.sparta.orderservice.repository.OrderRepository;
@@ -29,6 +31,7 @@ public class VendorOrderService {
 
 	private final ProductClient productClient;
 	private final OrderRepository orderRepository;
+	private final KafkaTemplate<String, SlackMessageEvent> kafkaTemplate;
 
 	@Transactional
 	public OrderResponseDto createOrder(CreateOrderRequestDto requestDto, UUID vendorId) {
@@ -88,6 +91,26 @@ public class VendorOrderService {
 			orderRepository.save(order);
 
 			int totalPrice = product.getPrice() * requestDto.getQuantity();
+
+			//slack 알림 이벤트 발행
+			SlackMessageEvent event = SlackMessageEvent.builder()
+				.orderId(order.getOrderId())
+				.customerName("홍길동")
+				.customerEmail("customer@example.com")  // 수령 업체 이메일
+				.productName(product.getProductName())
+				.quantity(requestDto.getQuantity())
+				.request(requestDto.getRequest())
+				.orderTime(order.getCreatedAt())
+				.startHubName("서울허브")  // 출발 허브명
+				.endHubName("부산허브")    // 도착 허브명
+				.estimatedTime(3)          // 예상 소요 시간 (예: 3시간)
+				.slackAccountId("U0XXXXXXX")  // 허브 담당자 Slack ID
+				.deliveryManagerName("김배달")  // 배송 담당자 이름
+				.deliveryManagerEmail("delivery@example.com")
+				.build();
+
+			kafkaTemplate.send("slack-notify", event);
+			log.info("📤 Slack 알림 Kafka 이벤트 발행: {}", event);
 
 			return OrderResponseDto.builder()
 				.orderId(order.getOrderId())
