@@ -4,9 +4,9 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
-group = 'com.teammyung'
+group = 'com.sparta'
 version = '0.0.1-SNAPSHOT'
-description = 'Demo project for Spring Boot'
+description = 'Order Service for MSA'
 
 java {
 	toolchain {
@@ -20,8 +20,8 @@ configurations {
 	}
 }
 
-repositories {
-	mavenCentral()
+ext {
+	set('springCloudVersion', "2025.0.0")
 }
 
 dependencies {
@@ -36,11 +36,33 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	//swagger
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0"
 	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
+	// Eureka
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	// Feign
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+	implementation 'io.github.openfeign:feign-jackson:13.3'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	// Zipkin
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+	// Kafka
+	implementation 'org.springframework.kafka:spring-kafka'
+	//zitpack
+	implementation 'com.github.TeamMyung:global-event:07164266fa'
+}
 
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
 }
 
 tasks.named('test') {
