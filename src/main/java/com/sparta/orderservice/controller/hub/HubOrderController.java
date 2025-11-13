@@ -19,11 +19,13 @@ import com.sparta.orderservice.service.OrderListService;
 import com.sparta.orderservice.service.OrderStatusService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/orders/hub")
+@Tag(name = "Hub 주문 API", description = "허브관리자(HUB)용 주문 관련 API")
 public class HubOrderController {
 
 	private final OrderListService orderListService;

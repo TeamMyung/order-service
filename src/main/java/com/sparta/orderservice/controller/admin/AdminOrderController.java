@@ -19,11 +19,13 @@ import com.sparta.orderservice.service.OrderStatusService;
 import com.sparta.orderservice.service.admin.AdminOrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/orders/admin")
+@Tag(name = "Admin 주문 API", description = "관리자(ADMIN)용 주문 관련 API")
 public class AdminOrderController {
 
 	private final AdminOrderService adminOrderService;
