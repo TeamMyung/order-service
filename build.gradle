@@ -20,10 +20,6 @@ configurations {
 	}
 }
 
-repositories {
-	mavenCentral()
-}
-
 ext {
 	set('springCloudVersion', "2025.0.0")
 }
@@ -57,6 +53,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+	// Kafka
+	implementation 'org.springframework.kafka:spring-kafka'
+	//zitpack
+	implementation 'com.github.TeamMyung:global-event:07164266fa'
 }
 
 dependencyManagement {
