@@ -7,10 +7,13 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.orderservice.dto.request.CreateOrderRequestDto;
 import com.sparta.orderservice.dto.response.OrderCancelResponseDto;
 import com.sparta.orderservice.dto.response.OrderResponseDto;
 import com.sparta.orderservice.entity.OrderEntity;
+import com.sparta.orderservice.entity.OutboxEventEntity;
 import com.sparta.orderservice.entity.enums.OrderStatus;
 import com.sparta.orderservice.global.client.ProductClient;
 import com.sparta.orderservice.global.client.ProductDetailResponseDto;
@@ -19,6 +22,7 @@ import com.sparta.globalevent.event.SlackMessageEvent;
 import com.sparta.orderservice.global.exception.CustomException;
 import com.sparta.orderservice.global.exception.ErrorCode;
 import com.sparta.orderservice.repository.OrderRepository;
+import com.sparta.orderservice.repository.OutboxEventRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +35,10 @@ public class VendorOrderService {
 
 	private final ProductClient productClient;
 	private final OrderRepository orderRepository;
-	private final KafkaTemplate<String, SlackMessageEvent> kafkaTemplate;
+	//private final KafkaTemplate<String, SlackMessageEvent> kafkaTemplate;
+	private final OutboxEventRepository outboxEventRepository;
+
+	private final ObjectMapper objectMapper;
 
 	@Transactional
 	public OrderResponseDto createOrder(CreateOrderRequestDto requestDto, UUID vendorId) {
@@ -90,8 +97,6 @@ public class VendorOrderService {
 
 			orderRepository.save(order);
 
-			int totalPrice = product.getPrice() * requestDto.getQuantity();
-
 			//slack 알림 이벤트 발행
 			SlackMessageEvent event = SlackMessageEvent.builder()
 				.orderId(order.getOrderId())
@@ -108,9 +113,28 @@ public class VendorOrderService {
 				.deliveryManagerName("김배달")  // 배송 담당자 이름
 				.deliveryManagerEmail("delivery@example.com")
 				.build();
-
+			/* 기존 kafka 제거
 			kafkaTemplate.send("slack-notify", event);
 			log.info("📤 Slack 알림 Kafka 이벤트 발행: {}", event);
+			*/
+			// outbox 테이블에 저장
+			JsonNode payload = objectMapper.valueToTree(event);
+
+			OutboxEventEntity outbox = OutboxEventEntity.builder()
+				.eventType("SLACK_MESSAGE_EVENT")     // 이벤트의 종류
+				.aggregateType("ORDER")               // 핵심 도메인
+				.aggregateId(order.getOrderId().toString()) // 어떤 주문인지
+				.payload(payload)                     // 실제 Kafka에 보낼 JSON
+				.status(OutboxEventEntity.Status.PENDING)  // "아직 발행 안됨"
+				.createdAt(LocalDateTime.now())
+				.updatedAt(LocalDateTime.now())
+				.build();
+
+			outboxEventRepository.save(outbox);
+
+			log.info("📦 Outbox 이벤트 저장 완료: id={}, orderId={}", outbox.getId(), order.getOrderId());
+
+			int totalPrice = product.getPrice() * requestDto.getQuantity();
 
 			return OrderResponseDto.builder()
 				.orderId(order.getOrderId())

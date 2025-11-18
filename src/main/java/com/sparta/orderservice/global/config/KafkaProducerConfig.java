@@ -14,6 +14,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sparta.globalevent.event.SlackMessageEvent;
 
 @Configuration
@@ -23,7 +24,7 @@ public class KafkaProducerConfig {
 	private String bootstrapServers;
 
 	@Bean
-	public ProducerFactory<String, SlackMessageEvent> producerFactory() {
+	public ProducerFactory<String, JsonNode> producerFactory() {
 		Map<String, Object> config = new HashMap<>();
 		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -32,7 +33,7 @@ public class KafkaProducerConfig {
 	}
 
 	@Bean
-	public KafkaTemplate<String, SlackMessageEvent> kafkaTemplate() {
+	public KafkaTemplate<String, JsonNode> kafkaTemplate() {
 		return new KafkaTemplate<>(producerFactory());
 	}
 }
